@@ -3,6 +3,7 @@
     <div>
         <div>Train</div>
         <div>Code</div>
+        <div> {{loggedInUser }} </div>
     </div>
     <div>
         <trainer />
@@ -14,5 +15,6 @@
 <script setup>
 import trainer from '../components/train.vue'
 import editor from '../components/editor.vue'
+import { loggedInUser } from '../store';
 
 </script>

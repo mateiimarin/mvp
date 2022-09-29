@@ -17,6 +17,7 @@
 <script setup>
 
 import { ref } from 'vue';
+import { isModelLoaded, rawDataInputs, rawHotPoints } from '../store'
 
 const status = ref("Loading tensorflow.js");
 const datacollectors = ref(3);
@@ -40,6 +41,10 @@ let predict = false;
   tf.tidy(() => {
     let answer = mobilenet.predict(tf.zeros([1, 224, 224, 3]));
     console.log(answer.shape);
+
+    isModelLoaded.value = true;
+    console.log("Converted")
+    
   });
 }
 
@@ -137,19 +142,20 @@ const trainAndPredict = async () => {
 
 
   /*JSON encoding test */
-  console.log(oneHotOutputs);
-  console.log(inputsAsTensor);
+
   let dx = inputsAsTensor.arraySync();
   let xd = JSON.stringify(dx);
   let xdd = JSON.parse(xd);
-  console.log(xd);
+
+  rawDataInputs.value = JSON.stringify(dx);
 
   let xddd = tf.tensor(xdd);
     
-      let dx2 = oneHotOutputs.arraySync();
+  let dx2 = oneHotOutputs.arraySync();
   let xd2 = JSON.stringify(dx2);
   let xdd2 = JSON.parse(xd2);
-  console.log(xd2);
+
+  rawHotPoints.value = xd2;
 
   let xddd2 = tf.tensor(xdd2);
   
@@ -160,6 +166,7 @@ const trainAndPredict = async () => {
     callbacks: {onEpochEnd: displayProgress}
   });
   
+
   outputsAsTensor.dispose();
   oneHotOutputs.dispose();
   inputsAsTensor.dispose();
