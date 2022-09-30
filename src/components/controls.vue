@@ -1,27 +1,29 @@
 <template>
-    <div id="controls">
-        <div id="projectView" >
-            <div class="row">
-                <div class="col-sm-5">
-                    <input placeholder="New project" v-model="pageName"/>
-                    <button @click="createPage">Create new Project</button>
-                    <span> {{errorMessage}}</span>
-                </div>
-                <div class="col-sm-5">
-                    <div v-for="project in userProjects" @click="updateCurrentUserProject(project.name)"> {{project.name}} </div>
+    <div id="controls" >
+        <div id="projectView" :class="{ hidden: isHidden }">
+            <div class="container-fluid">
+                <div class="row">
+               
+                        <input placeholder="New project" v-model="pageName" id="newInp"/>
+                        <button @click="createPage" id="newBtn">Create</button>
+                        <span> {{errorMessage}}</span>
+               
+            
+                        <div v-for="project in userProjects" @click="updateCurrentUserProject(project.name)"> {{project.name}} </div>
+
                 </div>
             </div>
         </div>
         <div id="projectControls">
             <button @click="saveProject">Save</button>
-            <div>{{ currentUserProject }}</div>
+            <div @click="isHidden = !isHidden">{{ currentUserProject }}</div>
         </div>
     </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { db, userProjects, currentUserProject, loggedInUser, dataClasses, appCode } from '../store'
+import { db, userProjects, currentUserProject, loggedInUser, dataClasses, appCode, jsScript, updateKey, htmlC } from '../store'
 import { setDoc, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { rawDataInputs, rawHotPoints, storage } from '../store';
 import { ref as refr, uploadString } from "firebase/storage";
@@ -34,7 +36,6 @@ const updateCurrentUserProject = (id) => {
 const saveProject = () => {
     if(rawDataInputs.value != "" && rawHotPoints.value != "")
     {
-        console.log("STARTEDDD")
         uploadString(refr(storage, 'projects/' + currentUserProject.value + '/data/dataInputs'), rawDataInputs.value)
         .then((snap) => {
             console.log('uploaded data inputs');
@@ -51,9 +52,12 @@ const saveProject = () => {
         await updateDoc(projectRef, {
             classes: dataClasses.value,
             template: appCode.value,
-            js_code: jsScript.value,
+            script: jsScript.value,
+            html_code: htmlC.value,
         });
     }
+
+    updateKey.value++;
 
 
     update();
@@ -62,6 +66,7 @@ const saveProject = () => {
 
 const pageName = ref("");
 const errorMessage = ref("");
+const isHidden = ref(true);
 
 const classesTemplate = ["Class 1", "Class 2"]
 
@@ -82,6 +87,7 @@ const createPage = () => {
                         name: pageName.value,
                     });  
                              
+                    updateCurrentUserProject(pageName.value)
                     pageName.value = "";
                     errorMessage.value = "";
                     
@@ -117,5 +123,37 @@ const createPage = () => {
 
               }
         }
+
+        #projectView {
+            bottom: 0;
+            transition: .3s ease-in;
+
+        }
     }
+
+    .hidden {
+        max-height: 0;
+        overflow: hidden;
+        margin:0;
+    }
+
+    #newInp {
+        width: 100%;
+        border: none;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        margin-bottom: 5px;
+        padding: 10px;
+        outline: none;
+    }
+
+    #newBtn {
+        width: 100%;
+        border: none;
+        padding: 3px 10px;
+        background-color: #76DCC2;
+        border-radius: 4px;
+    }
+
+
 </style>

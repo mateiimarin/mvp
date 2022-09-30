@@ -4,13 +4,13 @@
 
     <div class="container-fluid app-wrapper" >
         <div class="row">
-            <div class="col-lg-3" style="background-color: #f5f5f5; min-height: 100vh">
+            <div class="col-lg-3" style="background-color: #ECEEEE; min-height: 100vh; padding-top: 20px; position: relative;">
             <workspace />
-            <Controls />
+            <Controls/>
 
             </div>
             <div class="col-lg-9">
-                <iframe :src="getURL()" id="appPreview"></iframe>
+                <iframe :src="getURL()" id="appPreview" :key="updateKey"></iframe>
             </div>
         </div>
     </div>
@@ -18,7 +18,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { currentUserProject } from '../store';
+import { currentUserProject, updateKey} from '../store';
 import workspace from '../components/workspace.vue'
 import Controls from '../components/controls.vue'
 
@@ -37,6 +37,7 @@ const getURL = () => {
             min-width: 100%;
             height: 100vh;
         }
+
 
     }
 </style>

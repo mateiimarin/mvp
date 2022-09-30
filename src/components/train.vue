@@ -71,6 +71,8 @@
 
 #train {
   margin-right: 0px !important;
+  background-color: #677A86;
+  color: white;
 }
 </style>
 
@@ -215,7 +217,7 @@ watch(isModelLoaded, () => {
     status.value = '';
     
     for (let i = 0; i < CLASSES.value.length; i++) {
-      status.value += CLASSES.value[i] + ' data count: ' + dataCount.value[i] + '. ';
+      status.value += "Collect Data";
       console.log( CLASSES.value[i] + ' data count: ' + dataCount.value[i] + '. ')
     }
 
@@ -252,8 +254,8 @@ const trainAndPredict = async () => {
   
   let results = await model.fit(xddd, xddd2, {
     shuffle: true,
-    batchSize: 15,
-    epochs: 40,
+    batchSize: 8,
+    epochs: 15,
     callbacks: {onEpochEnd: displayProgress}
   });
   

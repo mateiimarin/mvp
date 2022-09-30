@@ -1,26 +1,47 @@
 <template>
-<div class="row">
-    <div class="col-sm-6">
-        <div v-for="(element, index) in appCode">
+
+
+        <div v-for="(element, index) in appCode" class="codeBlock">
             {{ blocks[element.id].name }}
-            <span v-if="blocks[element.id].has_slot" :id="index" contenteditable="true" @keyup="updateBlock(index)"> {{ element.content}} </span>
-
+            <span v-if="blocks[element.id].has_slot" :id="index" contenteditable="true" @keyup="updateBlock(index)"> {{ element.content}}  </span>
+            <font-awesome-icon icon="fa-solid fa-xmark" style="float:right; color: #a9a9a9; " @click="deleteBlock(index)"/>
         </div>
-    </div>
-    <div class="col-sm-6">
-        <div v-for="(block, index) in blocks">
-            {{block.name}}
 
-            <button @click="addBlock(index)">Add</button>
+
+        <div id="blocksList">
+            <div v-for="(block, index) in blocks">
+            <span @click="addBlock(index)">{{block.name}}</span>
         </div>
-    </div>
-</div>
+        </div>
+
 </template>
+
+<style lang="scss">
+    .codeBlock {
+        padding: 4px 10px;
+        background-color: #F5F5F5;
+        border-radius: 5px;
+        margin-bottom: 5px
+    }
+
+    #blocksList {
+        
+         div {
+            display: inline-block;
+            margin-right: 10px;
+            background-color: #76DCC2;
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-top: 6px;
+
+         }
+    }
+</style>
 
 <script setup>
 
-    import { ref } from 'vue';
-    import { appCode, jsScript } from '../store'
+    import { ref, watch } from 'vue';
+    import { isModelLoaded, appCode, currentUserProject, jsScript } from '../store'
 
     const blocks = [
         {
@@ -81,6 +102,12 @@
             start_tag: 'notify(',
             end_tag: ')',
             has_slot: true
+        },
+        {
+            name: 'write',
+            start_tag: 'document.getElementById("writeFunctionField").innerText += ',
+            end_tag: ';',
+            has_slot: true
         }
 
     ];
@@ -104,14 +131,30 @@
         build();
     }
 
+    const deleteBlock = (index) => {
+        appCode.value.splice(index, 1);
+    }
+
     
     const build = () => {
+        jsScript.value="";
         for(let i=0; i<appCode.value.length; i++) {
             jsScript.value += blocks[appCode.value[i].id].start_tag;
             jsScript.value += appCode.value[i].content;
             jsScript.value += blocks[appCode.value[i].id].end_tag; 
         }
     }
+
+    watch(isModelLoaded, () => {
+  getModelData(currentUserProject.value)
+  .then((value) => {
+    CLASSES.value = value.classes.slice();
+    datacollectors.value = value.classes.length;
+    appCode.value = value.template.slice();
+    jsScript.value = value.script;
+  })
+
+})
 
 
 </script>

@@ -1,5 +1,5 @@
 <template>
-<div :key="openedTab" id="#component">
+<div :key="openedTab" id="component">
     <div id="menu">
         <div @click="updateMenu(1)" :class="[{ active: isActive(1) }]">Train</div>
         <div @click="updateMenu(2)" :class="[{ active: isActive(2) }]">Blocks</div>
@@ -8,7 +8,7 @@
     <div id="editCard">
         <trainer v-if="isActive(1)"/>
         <editor v-if="isActive(2)"/>
-        <js-editor v-if="isActive(3)" />
+        <codex v-if="isActive(3)"/>
     </div>
 </div>
 </template>
@@ -16,6 +16,7 @@
 <script setup>
 import trainer from '../components/train.vue'
 import editor from '../components/editor.vue'
+import codex from '../components/code.vue'
 import { loggedInUser, openedTab } from '../store';
 
 const isActive = (id) => {

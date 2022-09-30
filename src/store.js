@@ -115,7 +115,10 @@ const messageReturn = () => {
 */
 
 const appCode = ref([]);
-const jsScript = ref([]);
+const jsScript = ref("");
+const htmlC = ref("");
+
+const updateKey = ref(0);
 
 export {
     loggedInUser,
@@ -132,5 +135,7 @@ export {
     openedTab, 
     dataClasses, 
     appCode,
-    jsScript
+    jsScript, 
+    updateKey, 
+    htmlC
 }

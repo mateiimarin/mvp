@@ -1,25 +1,50 @@
 <template>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-lg-5">
-                <p>{{status}}</p>
+            <div class="col-lg-6" style="background-color: #647682; min-height: 100vh;">
+                <p id="status">{{status}}</p>
                 <video id="webcam" autoplay ref="VIDEO"></video>
                 <button id="enableCam" @click="enableCam">Enable Webcam</button>
             </div>
-            <div class="col-lg-5">
-                <h1>Print results here!!!</h1>
+            <div class="col-lg-6">
+                <h1>Your AIM App</h1>
+                <p id="writeFunctionField"></p>
+                <div v-html="htmlcode">
+
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <style lang="scss">
+  #webcam {
+    max-width: 100%;
+    border-radius: 8px;
+    background-color: white;
+    padding: 10px;
+  }
+#enableCam {
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  color: white;
+  background-color: #051320;
+}
 
+#status {
+  font-size: 20px;
+  font-weight: 700;
+  padding: 10px;
+  background-color: #051320;
+  color: white;
+  border-radius: 6px;
+}
 </style>
 
 <script setup>
 import { ref, watch } from 'vue';
-import { isModelLoaded, rawDataInputs, rawHotPoints, getModelData, getModelInputs, getModelHotPoints } from '../store'
+import { isModelLoaded, rawDataInputs, rawHotPoints, getModelData, getModelInputs, getModelHotPoints, appCode, jsScript } from '../store'
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -163,12 +188,16 @@ const predictLoop = () => {
   }
 }
 
+const htmlcode = ref("");
 watch(isModelLoaded, () => {
   getModelData(projectId)
   .then((value) => {
+    console.log()
     CLASSES.value = value.classes.slice();
-
     datacollectors.value = value.classes.length;
+    appCode.value = value.template.slice();
+    jsScript.value = value.script;
+    htmlcode.value = value.html_code;
   })
 
 })
@@ -179,24 +208,21 @@ trainAndPredict();
 
 
 watch(currentClass, (newValue, oldValue) => {
-  let code = `
-        function notify(title) {
+
+      let variable = 'var currentClass= "' + currentClass.value + '";\n';
+      let new_code = variable + `function notify(title) {
           Notification.requestPermission().then(perm => {
             if(perm === 'granted') {
               let notif = new Notification(title, {
                 body: 'New Notification from AIM',
+                tag: 'notification1',
 
               })
             }
           })
-        }
+        }` + jsScript.value;
 
-        let x=10;
-        let y = 4;
-        if(x+y==14) notify("Lorem ipsum", "Dolor sit amet")
-      `;
-
-      let f = new Function(code);
+      let f = new Function(new_code);
       f();
 })
 
