@@ -1,6 +1,6 @@
 <template>
     <div id="controls">
-        <div >
+        <div id="projectView" >
             <div class="row">
                 <div class="col-sm-5">
                     <input placeholder="New project" v-model="pageName"/>
@@ -21,8 +21,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import { db, userProjects, currentUserProject, loggedInUser } from '../store'
-import { setDoc, doc, getDoc } from 'firebase/firestore'
+import { db, userProjects, currentUserProject, loggedInUser, dataClasses, appCode } from '../store'
+import { setDoc, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { rawDataInputs, rawHotPoints, storage } from '../store';
 import { ref as refr, uploadString } from "firebase/storage";
 
@@ -44,11 +44,26 @@ const saveProject = () => {
             console.log('uploadede data hotpoints');
         });
     }
+
+    const update = async () => {
+        const projectRef = doc(db, "projects", currentUserProject.value);
+        console.log(dataClasses.value)
+        await updateDoc(projectRef, {
+            classes: dataClasses.value,
+            template: appCode.value,
+            js_code: jsScript.value,
+        });
+    }
+
+
+    update();
+
 }
 
 const pageName = ref("");
 const errorMessage = ref("");
 
+const classesTemplate = ["Class 1", "Class 2"]
 
 const createPage = () => {
     if(pageName.value != "") {
@@ -60,6 +75,7 @@ const createPage = () => {
                     setDoc(pageRef, {
                         name: pageName.value,
 			            uid: loggedInUser,  
+                        classes: classesTemplate,
                     });  
 
                     setDoc(doc(db, "users/" + loggedInUser + "/projects", pageName.value), {

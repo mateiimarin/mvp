@@ -18,7 +18,7 @@
 </style>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { isModelLoaded, rawDataInputs, rawHotPoints, getModelData, getModelInputs, getModelHotPoints } from '../store'
 import { useRoute } from 'vue-router';
 
@@ -95,6 +95,8 @@ const enableCam = () => {
   }
 }
 
+
+
 const calculateFeaturesOnCurrentFrame = () => {
   return tf.tidy(() => {
     let videoFrameAsTensor = tf.browser.fromPixels(VIDEO.value);
@@ -139,6 +141,7 @@ const displayProgress = (epoch, logs) => {
   console.log('Epoch: ' + epoch, logs);
 }
 
+const currentClass = ref("");
 const predictLoop = () => {
   if (predict) {
     tf.tidy(() => {
@@ -146,11 +149,57 @@ const predictLoop = () => {
       let prediction = model.predict(imageFeatures.expandDims()).squeeze();
       let highestIndex = prediction.argMax().arraySync();
       let predictionArray = prediction.arraySync();
+
       status.value = CLASSES.value[highestIndex] + ' with ' + Math.floor(predictionArray[highestIndex] * 100) + '% confidence';
+      
+      currentClass.value = CLASSES.value[highestIndex];
+
+
+
+
     });
 
     window.requestAnimationFrame(predictLoop);
   }
 }
+
+watch(isModelLoaded, () => {
+  getModelData(projectId)
+  .then((value) => {
+    CLASSES.value = value.classes.slice();
+
+    datacollectors.value = value.classes.length;
+  })
+
+})
+
 trainAndPredict();
+
+
+
+
+watch(currentClass, (newValue, oldValue) => {
+  let code = `
+        function notify(title) {
+          Notification.requestPermission().then(perm => {
+            if(perm === 'granted') {
+              let notif = new Notification(title, {
+                body: 'New Notification from AIM',
+
+              })
+            }
+          })
+        }
+
+        let x=10;
+        let y = 4;
+        if(x+y==14) notify("Lorem ipsum", "Dolor sit amet")
+      `;
+
+      let f = new Function(code);
+      f();
+})
+
+
+
 </script>

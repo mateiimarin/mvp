@@ -3,9 +3,11 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, Timestamp, updateDoc } from "firebase/firestore";
 import { collection, getDocs, doc, getDoc, setDoc } from "firebase/firestore";
 import { ref as refr, getStorage, getDownloadURL } from "firebase/storage";
+import { getMessaging, getToken, onMessage} from 'firebase/messaging';
 // db connection
 
 const db = getFirestore();
+const messaging = getMessaging();
 
 //storage connection
 const storage = getStorage();
@@ -27,7 +29,6 @@ const isModelLoaded = ref(false);
 if(user) 
 {
     watch(isModelLoaded, () => {
-        console.log("START")
         getDocs(collection(db, "users/" + loggedInUser + "/projects"))
         .then((snapshot) => {
             let projects = [];
@@ -35,7 +36,6 @@ if(user)
                 projects.push(doc.data());
             })
             userProjects.value = projects;
-            console.log("FINISH")
         })
     })
 }
@@ -85,6 +85,38 @@ const getModelHotPoints = (projectId) => {
     })
 }
 
+const openedTab = ref(0);
+const dataClasses = ref([]);
+
+/*
+const requestForToken = () => {
+    return getToken(messaging, { vapidKey: 'BD6CCnulX2C-LEzf2yeWvTc5lG0kIhH_S3DgeyxzF97kXGJbVcvI9rMrSreJHsvktPD9gvCCWQv6bYgah7tHbOU' })
+      .then((currentToken) => {
+        if (currentToken) {
+          console.log('current token for client: ', currentToken);
+        } else {
+
+          console.log('No registration token available. Request permission to generate one.');
+        }
+      })
+      .catch((err) => {
+        console.log('An error occurred while retrieving token. ', err);
+      });
+  };
+
+const messageReturn = () => {
+    return new Promise((resolve) => {
+        onMessage(messaging, (payload) => {
+            console.log("Result:", payload)
+            resolve(payload)
+        })
+    })
+}
+*/
+
+const appCode = ref([]);
+const jsScript = ref([]);
+
 export {
     loggedInUser,
     db, 
@@ -96,5 +128,9 @@ export {
     rawDataInputs,
     rawHotPoints,
     getModelInputs,
-    getModelHotPoints
+    getModelHotPoints,
+    openedTab, 
+    dataClasses, 
+    appCode,
+    jsScript
 }

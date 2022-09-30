@@ -1,23 +1,83 @@
 <template>
     <p>{{status}}</p>
     <video id="webcam" autoplay ref="VIDEO"></video>
+
+
+        <div id="classList">
+          <div v-for="i in datacollectors">
+            <div class="classItem">
+              <span class="dataCounter">{{dataCount[i-1]}}</span>
+              <span contenteditable="true" @keyup="updateClass(i-1)" :id="i">{{ CLASSES[i-1] }}</span>
+              <button class="dataCollector" :data-1hot="i" :data-name="i" @click="gatherDataForClass(i-1)" @touchend="gatherDataForClass(i-1)"><font-awesome-icon icon="fa-solid fa-plus" /></button>
+            </div>
+          </div>
+    </div>
     
     <button id="enableCam" @click="enableCam">Enable Webcam</button>
-    <div v-for="i in datacollectors">
-      <button class="dataCollector" :data-1hot="i" :data-name="i" @mousedown="gatherDataForClass(i-1)" @mouseup="gatherDataForClass(i-1)" @touchend="gatherDataForClass(i-1)">Gather Class {{i}} Data</button>
-    </div>
-    <button id="train" @click="trainAndPredict">Train &amp; Predict!</button>
+    <button id="addClass" @click="addClass"><font-awesome-icon icon="fa-solid fa-plus" /></button>
+    <button id="train" @click="trainAndPredict">Train</button>
     <button id="reset" @click="reset">Reset</button>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+#webcam {
+  max-width: 100% !important;
+  border-radius: 5px;
+}
 
+.classItem {
+  padding: 5px 10px;
+  background-color: #eeeeee;
+  border-radius: 5px;
+  margin-bottom: 5px;
+  min-height:  32px;
+
+  .dataCollector {
+    float: right;
+    border: none;
+    border-radius: 3px;
+    font-size: 14px;
+    background-color: rgb(231, 231, 231);
+  }
+
+  .dataCounter {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 6px;
+    background-color: powderblue;
+    border-radius: 5px;
+    
+  }
+
+}
+
+#classList {
+    max-height: 120px;
+    overflow: auto;
+  }
+
+#enableCam, #train, #reset, #addClass {
+  border: none;
+  padding: 4px 8px;
+  margin-right: 5px;
+  border-radius: 3px;
+}
+
+
+#train, #reset {
+ float: right;
+
+}
+
+#train {
+  margin-right: 0px !important;
+}
 </style>
 
 <script setup>
 
-import { ref } from 'vue';
-import { isModelLoaded, rawDataInputs, rawHotPoints } from '../store'
+import { ref, watch } from 'vue';
+import { isModelLoaded, rawDataInputs, rawHotPoints, dataClasses, getModelData, currentUserProject } from '../store'
 
 const status = ref("Loading tensorflow.js");
 const datacollectors = ref(3);
@@ -30,10 +90,10 @@ let gatherDataState = stopCollection;
 let videoIsPlaying = false;
 let inputData = [];
 let outputData = [];
-const dataCount = ref([]);
+const dataCount = ref([0, 0, 0]);
 let predict = false;
 
- const loadMobileNetFeatureModel = async () => {
+  const loadMobileNetFeatureModel = async () => {
   const URL = 'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_small_100_224/feature_vector/5/default/1';
   mobilenet = await tf.loadGraphModel(URL, {fromTFHub: true});
   status.value = 'Model is ready';
@@ -50,7 +110,22 @@ let predict = false;
 
 loadMobileNetFeatureModel();
 
+const updateClass = (index) => {
+  let iid = index+1;
+  let sid = iid.toString();
+  CLASSES.value[index] = document.getElementById(sid).innerText;
+  dataClasses.value[index] = CLASSES.value[index];
+} 
 
+
+const addClass = () => {
+  let vl = datacollectors.value + 1;
+  let stringvl = vl.toString();
+  CLASSES.value.push('Class ' + stringvl);
+  dataClasses.value.push('Class ' + stringvl);
+  dataCount.value.push(0);
+  datacollectors.value++;
+}
 
 let model = tf.sequential();
 model.add(tf.layers.dense({inputShape: [1024], units: 128, activation: 'relu'}));
@@ -86,9 +161,10 @@ const enableCam = () => {
   }
 }
 
-const gatherDataForClass = (classId) => {
-  if(gatherDataState === stopCollection) gatherDataState = classId;
-  else gatherDataState = stopCollection;
+const gatherDataForClass = (classId) => {3
+
+  if(gatherDataState === classId) gatherDataState = stopCollection;
+  else gatherDataState = classId;
   dataGatherLoop();
 }
 
@@ -106,6 +182,21 @@ const calculateFeaturesOnCurrentFrame = () => {
     return mobilenet.predict(normalizedTensorFrame.expandDims()).squeeze();
   });
 }
+
+
+watch(isModelLoaded, () => {
+  getModelData(currentUserProject.value)
+  .then((value) => {
+    console.log()
+    CLASSES.value = value.classes.slice();
+    dataClasses.value = value.classes.slice();
+
+
+    datacollectors.value = value.classes.length;
+  })
+
+})
+
 
  const dataGatherLoop = () => {
 
@@ -161,8 +252,8 @@ const trainAndPredict = async () => {
   
   let results = await model.fit(xddd, xddd2, {
     shuffle: true,
-    batchSize: 5,
-    epochs: 15,
+    batchSize: 15,
+    epochs: 40,
     callbacks: {onEpochEnd: displayProgress}
   });
   
